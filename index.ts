@@ -4,13 +4,14 @@ import { Client, Collection, Intents, Message } from "discord.js";
 import Logger from "./util/Logger";
 import Event from "./events/Event";
 import * as fs from 'fs';
+import Command from "./commands/base/Command";
 
 const dev = process.env.NODE_ENV === "dev";
 let intents: Intents = new Intents();
 let client = new Client({intents: intents.add(Intents.FLAGS.GUILDS).add(Intents.FLAGS.GUILD_MESSAGES).add(Intents.FLAGS.GUILD_MEMBERS)});
 let log = new Logger("DEBUG");
 //define client.commands
-let commands: Collection<string[], (client: Client, msg: Message, args: string[]) => any> = new Collection();
+let commands: Collection<string[], Command> = new Collection();
 
 client.on("ready", () => {
     log.info("Ready!");
@@ -22,7 +23,7 @@ fs.readdir("./events", (err, files) => {
         if (!file.endsWith("Event.js")) return;
         if(file == "Event.js") return;
         import(`./events/${file}`).then(event => {
-            log.debug(`Loaded event: ${event.default.eventName}`);
+            log.info(`Loaded event: ${event.default.eventName}`);
             client.on(event.default.eventName, (...args) => {
                 event.default.handle(client, ...args);
             });
@@ -32,13 +33,15 @@ fs.readdir("./events", (err, files) => {
 });
 
 fs.readdir('./commands/', (err, allFiles) => {
-    if (err) console.log(err);
+    if (err) log.error(err);
     let files = allFiles.filter(f => f.split('.').pop() === (dev ? 'ts' : 'js'));
     if (files.length <= 0) console.log('No commands found!');
     else for(let file of files) {
-        log.debug(`Loading command: ${file.slice(0, -3)}`);
-        const props = require(`./commands/${file}`) as {names: string[], run: (client: Client, msg: Message, args: string[]) => any};
-        commands.set(props.names, props.run);
+        log.info(`Loading command: ${file.slice(0, -3)}`);
+        const props = require(`./commands/${file}`) as {names: string[], run: (client: Client, msg: Message, args: string[]) => any, description: string, dev: boolean};
+        let command = new Command(props.names, props.description, props.run);
+        command.dev = props.dev;
+        commands.set(props.names, command);
     }
 });
 

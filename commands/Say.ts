@@ -1,9 +1,10 @@
 import { Client, Message } from "discord.js";
 
 export function run(client: Client, msg: Message, args: string[]) {
-    msg.channel.send("Syncing...");
+    msg.channel.send(args.join(" "));
+    msg.delete();
 }
 
-export const names = ["sync", "syncranks"];
+export const names = ["say", "echo"];
 export const description = "Sync your server with MEE6 ranks.";
-export const dev = false;
+export const dev = true;

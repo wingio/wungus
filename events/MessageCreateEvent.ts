@@ -13,7 +13,8 @@ export default class MessageCreateEvent extends Event {
             let command = commands.find((r, n) => n.includes(commandName));
             if(!command) return;
             try {
-                command(client, msg, args);
+                if(command.dev && msg.author.id !== "298295889720770563") return;
+                command.run(client, msg, args);
             } catch(e) {
                 this.log.error("Error while running: !" + commandName, e);
             }

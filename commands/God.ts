@@ -5,3 +5,4 @@ export function run(client: Client, msg: Message, args: string[]) {
 }
 
 export const names = ["god", "worship"];
+export const description = "Worship the God of the universe.";
