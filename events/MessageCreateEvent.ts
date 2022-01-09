@@ -10,10 +10,10 @@ export default class MessageCreateEvent extends Event {
         if(msg.content.startsWith("!")) {
             let args = msg.content.split(/ +/);
             let commandName = args.shift().slice(1).toLowerCase();
-            let command = commands.get(commandName);
+            let command = commands.find((r, n) => n.includes(commandName));
             if(!command) return;
             try {
-                command.run(client, msg, args);
+                command(client, msg, args);
             } catch(e) {
                 this.log.error("Error while running: !" + commandName, e);
             }
