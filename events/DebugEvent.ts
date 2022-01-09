@@ -1,5 +1,4 @@
 import { Client, Message } from "discord.js";
-import commands from "..";
 import Event from "./Event";
 
 export default class DebugEvent extends Event {

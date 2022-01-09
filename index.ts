@@ -5,19 +5,30 @@ import Logger from "./util/Logger";
 import Event from "./events/Event";
 import * as fs from 'fs';
 import Command from "./commands/base/Command";
+import { getUser, getUsers } from "./util/api/APIUtils";
+import User from "./api/models/User";
 
 const dev = process.env.NODE_ENV === "dev";
 let intents: Intents = new Intents();
 let client = new Client({intents: intents.add(Intents.FLAGS.GUILDS).add(Intents.FLAGS.GUILD_MESSAGES).add(Intents.FLAGS.GUILD_MEMBERS)});
-let log = new Logger("DEBUG");
-//define client.commands
-let commands: Collection<string[], Command> = new Collection();
+
+export const commands: Collection<string[], Command> = new Collection();
+export const userCache: Collection<string, User> = new Collection();
 
 client.on("ready", () => {
+    let log = new Logger("DEBUG");
     log.info("Ready!");
+
+    getUsers().then(users => {
+        log.debug("[API] Users preloaded: " + users.length);
+        for(let user of users) {
+            userCache.set(user.userId, user);
+        }
+    })
 });
 
 fs.readdir("./events", (err, files) => {
+    let log = new Logger("DEBUG", "Event Loader");
     if (err) return log.error(err);
     files.forEach(file => {
         if (!file.endsWith("Event.js")) return;
@@ -33,6 +44,7 @@ fs.readdir("./events", (err, files) => {
 });
 
 fs.readdir('./commands/', (err, allFiles) => {
+    let log = new Logger("DEBUG", "Command Loader");
     if (err) log.error(err);
     let files = allFiles.filter(f => f.split('.').pop() === (dev ? 'ts' : 'js'));
     if (files.length <= 0) console.log('No commands found!');
@@ -46,4 +58,3 @@ fs.readdir('./commands/', (err, allFiles) => {
 });
 
 client.login(process.env.TOKEN);
-export default commands;

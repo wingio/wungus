@@ -18,15 +18,21 @@ enum LogLevel {
 // All logger libs suck, so here we go
 export default class Logger {
     private level: LogLevel;
+    private tag: string;
 
-    public constructor(level: string) {
+    public constructor(level: string, tag?: string) {
         const logLevel = LogLevel[level.toUpperCase() as "DEBUG"];
         if (logLevel === undefined) throw new Error(`Invalid LogLevel: ${level}`);
         this.level = logLevel;
+        this.tag = tag;
     }
 
     private static get timestamp() {
         return new Date().toLocaleString();
+    }
+
+    public static log(message: string) {
+        new Logger("DEBUG").write(Color.DEBUG, message);
     }
 
     private write(color: string, message: string) {
@@ -38,7 +44,7 @@ export default class Logger {
 
         const levelStr = LogLevel[level];
         const color = Color[levelStr as keyof typeof Color];
-        this.write(color, `${Logger.timestamp} [${levelStr}] `);
+        this.write(color, `${Logger.timestamp} [${levelStr}] ${this.tag ? `[${this.tag}] ` : ""}`);
 
         args.forEach(arg => {
             // prettier-ignore

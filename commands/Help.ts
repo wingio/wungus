@@ -1,5 +1,5 @@
 import { Client, Message, MessageEmbed } from "discord.js";
-import commands from "..";
+import { commands } from "..";
 
 export function run(client: Client, msg: Message, args: string[]) {
     const embed = new MessageEmbed()
