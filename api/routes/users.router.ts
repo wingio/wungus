@@ -31,11 +31,10 @@ usersRouter.post("/", async (req: Request, res: Response) => {
         const query = { userId: newUser.userId };
         const user = (await collections.users.findOne(query)) as unknown as User;
         if(user) {
-            res.status(409).send("User already exists");
+            res.status(200).send(user);
             return;
         }
 
-        
         const result = await collections.users.insertOne(newUser);
 
         result
@@ -52,7 +51,7 @@ usersRouter.get("/:id", async (req: Request, res: Response) => {
 
     try {
         
-        const query = { userId: parseInt(id) };
+        const query = { userId: id };
         const user = (await collections.users.findOne(query)) as unknown as User;
 
         if (user) {
@@ -70,12 +69,12 @@ usersRouter.put("/:id", async (req: Request, res: Response) => {
 
     try {
         const updatedUser: User = req.body as User;
-        const query = { userId: parseInt(id) };
+        const query = { userId: id };
       
         const result = await collections.users.updateOne(query, { $set: updatedUser });
 
         result
-            ? res.status(200).send(`Successfully updated user ${id}`)
+            ? res.status(200).send(updatedUser)
             : res.status(304).send(`User with id: ${id} not updated`);
     } catch (error) {
         console.error(error.message);

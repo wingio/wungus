@@ -7,6 +7,6 @@ export function run(client: Client, msg: Message, args: string[]) {
     msg.delete();
 }
 
-export const names = ["say", "echo"];
+export const names = ["say", "echo", "speak"];
 export const description = "Sync your server with MEE6 ranks.";
 export const dev = true;

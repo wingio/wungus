@@ -5,15 +5,24 @@ import Logger from "./util/Logger";
 import Event from "./events/Event";
 import * as fs from 'fs';
 import Command from "./commands/base/Command";
-import { getUser, getUsers } from "./util/api/APIUtils";
+import { addGuild, getMembers, getUser, getUsers } from "./util/api/APIUtils";
 import User from "./api/models/User";
+import Member from "./api/models/Member";
+import { getLevelFromXP, getTotalXpNeeded } from "./util/XPUtils";
+import GuildManager from "./managers/GuildManager";
+import UserManager from "./managers/UserManager";
 
 const dev = process.env.NODE_ENV === "dev";
 let intents: Intents = new Intents();
 let client = new Client({intents: intents.add(Intents.FLAGS.GUILDS).add(Intents.FLAGS.GUILD_MESSAGES).add(Intents.FLAGS.GUILD_MEMBERS)});
 
 export const commands: Collection<string[], Command> = new Collection();
+
+export const memberCache: Collection<string, Collection<string, Member>> = new Collection();
 export const userCache: Collection<string, User> = new Collection();
+
+export const guilds: GuildManager = new GuildManager(client);
+export const users: UserManager = new UserManager(client);
 
 client.on("ready", () => {
     let log = new Logger("DEBUG");
@@ -25,7 +34,38 @@ client.on("ready", () => {
             userCache.set(user.userId, user);
         }
     })
+
+    client.guilds.cache.forEach(guild => {
+        let guildId = guild.id;
+        if(guild) addGuild(guild.name, guildId).then(g => {
+            if(g) log.debug("[API] Guild added: " + g.name);
+            getMembers(guildId).then(members => {
+                log.debug("[API] Members preloaded: " + members.length);
+                for(let member of members) {
+                    if(!memberCache.has(guildId)) memberCache.set(guildId, new Collection());
+                    memberCache.get(guildId).set(member.userId, member);
+                }
+            });
+        });
+    });
 });
+
+client.on("guildCreate", guild => {
+    let guildId = guild.id;
+    let log = new Logger("DEBUG");
+    addGuild(guild.name, guildId).then(g => {
+        if(g) log.debug("[API] Guild added: " + g.name);
+        memberCache.set(guildId, new Collection());
+        getMembers(guildId).then(members => {
+            log.debug("[API] Members preloaded: " + members.length);
+            for(let member of members) {
+                if(!memberCache.has(guildId)) memberCache.set(guildId, new Collection());
+                memberCache.get(guildId).set(member.userId, member);
+            }
+        });
+    });
+})    
+
 
 fs.readdir("./events", (err, files) => {
     let log = new Logger("DEBUG", "Event Loader");
