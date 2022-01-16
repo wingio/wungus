@@ -36,7 +36,7 @@ export default class UserManager {
 
     private handleUserUpdate() {
         this.client.on("userUpdate", (oldUser, newUser) => {
-            if(user.bot) return;
+            if(newUser.bot) return;
             let updatedUser = new User(newUser.id, newUser.username, newUser.discriminator);
             updateUser(updatedUser).then(user => {
                 this.cache.set(user.userId, user);
