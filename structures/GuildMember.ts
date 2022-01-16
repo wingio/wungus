@@ -1,4 +1,5 @@
-import { User } from "discord.js";
+import { users } from "..";
+import User from "../api/models/User";
 import { updateMemberXp } from "../util/api/APIUtils";
 import { getXPToNextLevel, updateUserXp } from "../util/XPUtils";
 
@@ -9,6 +10,7 @@ export default class GuildMember {
     public guildId: string;
     public rank: number;
     public id: string;
+    public user: User;
 
     constructor(id: string, guildId: string, xp: number, totalXp: number, level: number, rank: number) {
         this.xp = xp;
@@ -17,6 +19,7 @@ export default class GuildMember {
         this.guildId = guildId;
         this.rank = rank;
         this.id = id;
+        this.user = users.cache.get(id);
     }
 
     public addXp(xp: number): boolean {

@@ -95,16 +95,28 @@ guildsRouter.post("/:id/members", async (req: Request, res: Response) => {
 
 guildsRouter.get("/:id/members", async (req: Request, res: Response) => {
     const id = req?.params?.id;
+    const limit = parseInt(req.query.limit?.toString());
+    const page = parseInt(req.query.page?.toString());;
 
     try {
         const guild = (await collections.guilds.findOne({ id: id })) as unknown as Guild;
         const query = { guildId: id };
-        const users = (await collections.members.find(query).toArray()) as unknown as Member[];
+        const users = (await collections.members.find(query).sort({totalXp : -1}).toArray()) as unknown as Member[];
 
-        if (guild) {
-            res.status(200).send(users);
+        if(limit && page && guild){
+            const start = (page - 1) * limit;
+            const end = page * limit;
+            const sliced = users.slice(start, end);
+            sliced.forEach(mem => {
+                mem.rank = users.indexOf(mem) + 1;
+            })
+            res.status(200).send(sliced);
         } else {
-            res.status(404).send("Guild not found");
+            if (guild) {
+                res.status(200).send(users);
+            } else {
+                res.status(404).send("Guild not found");
+            }
         }
     } catch (error) {
         res.status(404).send(`Unable to find matching document with id: ${req.params.id}`);
